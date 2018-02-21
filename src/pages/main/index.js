@@ -40,6 +40,36 @@ class page extends Component{
   }
 
   render(){
+    console.log();
+    var s1,s2,s3,s4;
+    if(navigator.userAgent.search(/Mobile/)!=-1){
+      s1=`#codepanel {
+      width:100%;
+      height:100vw;
+      overflow-Y:auto;
+  }`;
+      s2=`#codepanel {
+      transform:rotateX(-10deg) translateZ(-100px);
+}`
+      s3=`#codepanel {
+      position:relative;
+      left:0;
+}`
+    }else{
+      s1=`#codepanel {
+      width:50%;
+      height:45vw;
+      overflow-Y:auto;
+  }`;
+      s2=`#codepanel {
+      transform:rotateY(10deg) translateZ(-100px);
+}`
+      s3=`#codepanel {
+      position:fixed;
+      left:0;
+}`
+    }
+
     return (<div><div id="codepanel">
 
       <Showtext gettarget={this.getTarget} start={true} finish={this.finish} >{`/*
@@ -68,23 +98,14 @@ class page extends Component{
       <Showtext gettarget={this.getTarget} finish={this.finish} addstyle={true} >{`#codepanel {
       border:1px solid white;
 }`}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`#codepanel {
-      width:50%;
-      height:45vw;
-      overflow-Y:auto;
-}`}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s1}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} >{`
 /*  加点3D效果,看起来有立体感些  */`}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`#app {
       perspective:1000px;
 }`}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`#codepanel {
-      transform:rotateY(10deg) translateZ(-100px);
-}`}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`#codepanel {
-      position:fixed;
-      left:0;
-}`}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s2}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s3}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} >{`
 /*  代码看起来有些难识别,让代码高亮  */`}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`.selector {
