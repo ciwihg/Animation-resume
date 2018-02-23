@@ -6,27 +6,76 @@ class page extends Component{
   constructor(props){
     super(props);
     this.state={
-      classname:''
+      target:"Pc"
     }
+    this.play=true;
     this.targets=[];
-    this.index=-1;
+    this.index=0;
     this.targetsR=[];
-    this.indexR=-1;
+    this.indexR=0;
+    this.styles=[];
+    this.mobilestyle=[`#codepanel {
+    width:100%;
+    height:100vw;
+    overflow-Y:auto;
+}`,`#codepanel {
+transform:rotateX(-10deg) translateZ(-100px);
+}`,`#codepanel {
+position:relative;
+left:0;
+}`];
+    this.pcstyle=[`#codepanel {
+    width:50%;
+    height:45vw;
+    overflow-Y:auto;
+}`,`#codepanel {
+    transform:rotateY(10deg) translateZ(-100px);
+}`,`#codepanel {
+    position:fixed;
+    left:0;
+}`];
+    this.getStyles=this.getStyles.bind(this);
     this.getTarget=this.getTarget.bind(this);
     this.getTargetR=this.getTargetR.bind(this);
     this.finish=this.finish.bind(this);
     this.finishR=this.finishR.bind(this);
     this.finishSV=this.finishSV.bind(this);
+    this.getWindowType=this.getWindowType.bind(this);
+  }
+  getDeviceType(){
+    if(navigator.userAgent.search(/Mobile/)!==-1){
+      this.setState({
+        target:"Mobile"
+      })
+    }
+  }
+  getWindowType(){
+
+    if(window.innerWidth<768){
+      this.removeStyle(this.styles,"Mobile");
+   this.setState({
+       target:"Mobile"
+      });
+    }else{
+      this.removeStyle(this.styles,"Pc");
+      this.setState({
+        target:"Pc"
+     });
+    }
+
+  }
+  componentWillMount(){
+    this.getDeviceType();
+    window.onresize=this.getWindowType;
   }
   finish(){
     this.index++
     this.targets[this.index].show();
-
   }
   finishR(){
     this.indexR++
     this.targetsR[this.indexR].show();
-
+    //console.log(this.styles);
   }
   finishSV(){
     this.rightelement.className='right';
@@ -38,36 +87,39 @@ class page extends Component{
   getTargetR(target){
     this.targetsR.push(target);
   }
-
+  getStyles(style){
+    this.styles.push(style);
+  }
+  removeStyle(a,type){
+    if(a.length>0){
+      for (var i = 0; i < a.length; i++) {
+        document.head.removeChild(a[i]);
+        var style=document.createElement("style");
+        type=='Mobile'?(style.innerHTML=this.mobilestyle[i]):(style.innerHTML=this.pcstyle[i])
+        document.head.appendChild(style);
+        a[i]=style;
+      }
+    }
+  }
+  addStyle(a){
+    for (var i = 0; i < a.length; i++) {
+      var style=document.createElement("style");
+     style.innerHTML=a[i];
+     document.head.appendChild(style);
+     this.styles[i]=style;
+      }
+  }
   render(){
-    console.log();
-    var s1,s2,s3,s4;
-    if(navigator.userAgent.search(/Mobile/)!=-1){
-      s1=`#codepanel {
-      width:100%;
-      height:100vw;
-      overflow-Y:auto;
-  }`;
-      s2=`#codepanel {
-      transform:rotateX(-10deg) translateZ(-100px);
-}`
-      s3=`#codepanel {
-      position:relative;
-      left:0;
-}`
+
+    var s1,s2,s3,ss=[];
+    if(this.state.target=='Mobile'){
+      s1=this.mobilestyle[0];
+      s2=this.mobilestyle[1];
+      s3=this.mobilestyle[2];
     }else{
-      s1=`#codepanel {
-      width:50%;
-      height:45vw;
-      overflow-Y:auto;
-  }`;
-      s2=`#codepanel {
-      transform:rotateY(10deg) translateZ(-100px);
-}`
-      s3=`#codepanel {
-      position:fixed;
-      left:0;
-}`
+      s1=this.pcstyle[0];
+      s2=this.pcstyle[1];
+      s3=this.pcstyle[2];
     }
 
     return (<div><div id="codepanel">
@@ -98,14 +150,14 @@ class page extends Component{
       <Showtext gettarget={this.getTarget} finish={this.finish} addstyle={true} >{`#codepanel {
       border:1px solid white;
 }`}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s1}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} getstyle={this.getStyles}>{s1}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} >{`
 /*  加点3D效果,看起来有立体感些  */`}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`#app {
       perspective:1000px;
 }`}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s2}</Showtext>
-      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{s3}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} getstyle={this.getStyles}>{s2}</Showtext>
+      <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} getstyle={this.getStyles}>{s3}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} >{`
 /*  代码看起来有些难识别,让代码高亮  */`}</Showtext>
       <Showtext gettarget={this.getTarget}  finish={this.finish} addstyle={true} >{`.selector {

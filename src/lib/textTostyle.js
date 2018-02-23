@@ -6,6 +6,7 @@ class Texttostyle {
     var style=document.createElement("style");
    style.innerHTML=c;
    document.head.appendChild(style);
+   return style;
   }
 }
 

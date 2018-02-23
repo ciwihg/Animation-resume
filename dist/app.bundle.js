@@ -961,7 +961,6 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
       var t = new __WEBPACK_IMPORTED_MODULE_2__lib_textTostyle_js__["a" /* default */]();
       this.props.addstyle && t.createTag(this.props.children);
     } else {
-      console.log("s");
       document.querySelector("#codepanel").scrollTop += 10;
       this.els[this.animationIndex].className = this.els[this.animationIndex].className + " showon";
       this.animationIndex++;
@@ -1027,7 +1026,6 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
   componentDidUpdate() {
 
     this.startAnimation();
-    // (this.props.addstyle)&&(console.log(1),t.createTag(this.props.children))
   }
   render() {
     if (this.state.show) {

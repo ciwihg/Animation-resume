@@ -5,6 +5,8 @@ class page extends Component{
   constructor(props){
     super(props);
     this.animationIndex=1;
+    this.selfupdate=false;
+    this.pause=false;
     this.state={
       show:this.props.start
     }
@@ -14,13 +16,24 @@ class page extends Component{
     if(this.animationIndex==this.els.length){
       (this.props.finish)&&(this.props.finish(this));
       var t=new text2style();
-        (this.props.addstyle)&&(t.createTag(this.props.children))
+      var style;
+        (this.props.addstyle)&&(style=t.createTag(this.props.children));
+        (this.props.getstyle)&&(this.props.getstyle(style))
     }
     else{
       document.querySelector("#codepanel").scrollTop+=10;
+      if(this.pause){return;}
       this.els[this.animationIndex].className=this.els[this.animationIndex].className+" showon";
       this.animationIndex++;
     }
+  }
+  stopAnimation(){
+    this.pause=true;
+  }
+  playAnimation(){
+    this.pause=false;
+    this.els[this.animationIndex].className=this.els[this.animationIndex].className+" showon";
+    this.animationIndex++;
   }
   initContent(){
     this.texts=[];
@@ -39,20 +52,30 @@ class page extends Component{
     };
     var csspart='selector';
     for (var i = 0; i < this.props.children.length; i++) {
+
       if(this.props.addstyle){
 
         (csspartlist[this.props.children.charCodeAt(i)])?(csspart=csspartlist[this.props.children.charCodeAt(i)]):(csspart=csspartlist[csspart]);
 
-       var e=(<span key={i} ref={(el)=>{this.els.push(el);}} className={csspart} style={{whiteSpace:'pre'}} onAnimationEnd={this.handleNext}>{this.props.children[i]}</span>);
+       var e=(<span key={i} ref={(el)=>{el&&this.els.push(el);}} className={csspart} style={{whiteSpace:'pre'}} onAnimationEnd={this.handleNext}>{this.props.children[i]}</span>);
         }
       else{
 
-      var e=(<span key={i} ref={(el)=>{this.els.push(el);}} className='init' style={{whiteSpace:'pre'}} onAnimationEnd={this.handleNext}>{this.props.children[i]}</span>);
+      var e=(<span key={i} ref={(el)=>{el&&this.els.push(el);}} className='init' style={{whiteSpace:'pre'}} onAnimationEnd={this.handleNext}>{this.props.children[i]}</span>);
     }
+
       this.texts.push(e);
     }
+
+  }
+  clearClassName(els){
+    for (var i = 0; i < els.length; i++) {
+      els[i].className=els[i].className.replace(/showon/,'');
+    }
+    this.animationIndex=1;
   }
   startAnimation(){
+
     this.els[0].className=this.els[0].className+" showon";
   }
   show(){
@@ -61,23 +84,29 @@ class page extends Component{
     });
   }
   componentDidMount() {
-
+  //  console.log("component mount");
+  this.props.gettarget(this);
     if(this.state.show){
    this.startAnimation();
- }else{
-   this.props.gettarget(this);
- }
+ }//else{
+  //this.props.gettarget(this);
+ //}
 
  }
  componentDidUpdate(){
+   //console.log("component update");
+   //console.log(this);
 
-   this.startAnimation();
+   //this.clearClassName(this.els);
+    //this.els[0].offsetWidth;
+
+(this.selfupdate)&&this.startAnimation();
 
  }
   render(){
 if(this.state.show){
 this.initContent();
-
+this.selfupdate=true;
     return (<div>{this.texts}</div>);
 }
 else{
