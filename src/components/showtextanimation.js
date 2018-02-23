@@ -17,7 +17,6 @@ class page extends Component{
         (this.props.addstyle)&&(t.createTag(this.props.children))
     }
     else{
-      console.log("s");
       document.querySelector("#codepanel").scrollTop+=10;
       this.els[this.animationIndex].className=this.els[this.animationIndex].className+" showon";
       this.animationIndex++;
@@ -73,7 +72,6 @@ class page extends Component{
  componentDidUpdate(){
 
    this.startAnimation();
-  // (this.props.addstyle)&&(console.log(1),t.createTag(this.props.children))
 
  }
   render(){
