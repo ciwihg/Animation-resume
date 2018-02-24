@@ -68,14 +68,15 @@ class page extends Component{
     }
 
   }
-  clearClassName(els){
-    for (var i = 0; i < els.length; i++) {
-      els[i].className=els[i].className.replace(/showon/,'');
+  fixClassName(){
+    for (var i = 0; i < this.els.length; i++) {
+      (this.els[i].className.search(/showon/)==-1)&&(this.els[i].className=this.els[i].className+' showon');
     }
-    this.animationIndex=1;
   }
   startAnimation(){
-
+    if(this.els[0].className.search(/showon/)!=-1){
+      this.props.fix&&this.fixClassName();return;
+    }
     this.els[0].className=this.els[0].className+" showon";
   }
   show(){
@@ -84,21 +85,14 @@ class page extends Component{
     });
   }
   componentDidMount() {
-  //  console.log("component mount");
+
   this.props.gettarget(this);
     if(this.state.show){
    this.startAnimation();
- }//else{
-  //this.props.gettarget(this);
- //}
+ }
 
  }
  componentDidUpdate(){
-   //console.log("component update");
-   //console.log(this);
-
-   //this.clearClassName(this.els);
-    //this.els[0].offsetWidth;
 
 (this.selfupdate)&&this.startAnimation();
 
