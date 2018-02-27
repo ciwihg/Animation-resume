@@ -950,6 +950,8 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
   constructor(props) {
     super(props);
     this.animationIndex = 1;
+    this.selfupdate = false;
+    this.pause = false;
     this.state = {
       show: this.props.start
     };
@@ -959,12 +961,25 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
     if (this.animationIndex == this.els.length) {
       this.props.finish && this.props.finish(this);
       var t = new __WEBPACK_IMPORTED_MODULE_2__lib_textTostyle_js__["a" /* default */]();
-      this.props.addstyle && t.createTag(this.props.children);
+      var style;
+      this.props.addstyle && (style = t.createTag(this.props.children));
+      this.props.getstyle && this.props.getstyle(style);
     } else {
       document.querySelector("#codepanel").scrollTop += 10;
+      if (this.pause) {
+        return;
+      }
       this.els[this.animationIndex].className = this.els[this.animationIndex].className + " showon";
       this.animationIndex++;
     }
+  }
+  stopAnimation() {
+    this.pause = true;
+  }
+  playAnimation() {
+    this.pause = false;
+    this.els[this.animationIndex].className = this.els[this.animationIndex].className + " showon";
+    this.animationIndex++;
   }
   initContent() {
     this.texts = [];
@@ -983,6 +998,7 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
     };
     var csspart = 'selector';
     for (var i = 0; i < this.props.children.length; i++) {
+
       if (this.props.addstyle) {
 
         csspartlist[this.props.children.charCodeAt(i)] ? csspart = csspartlist[this.props.children.charCodeAt(i)] : csspart = csspartlist[csspart];
@@ -990,7 +1006,7 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
         var e = __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
           'span',
           { key: i, ref: el => {
-              this.els.push(el);
+              el && this.els.push(el);
             }, className: csspart, style: { whiteSpace: 'pre' }, onAnimationEnd: this.handleNext },
           this.props.children[i]
         );
@@ -999,15 +1015,24 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
         var e = __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
           'span',
           { key: i, ref: el => {
-              this.els.push(el);
+              el && this.els.push(el);
             }, className: 'init', style: { whiteSpace: 'pre' }, onAnimationEnd: this.handleNext },
           this.props.children[i]
         );
       }
+
       this.texts.push(e);
     }
   }
+  fixClassName() {
+    for (var i = 0; i < this.els.length; i++) {
+      this.els[i].className.search(/showon/) == -1 && (this.els[i].className = this.els[i].className + ' showon');
+    }
+  }
   startAnimation() {
+    if (this.els[0].className.search(/showon/) != -1) {
+      this.props.fix && this.fixClassName();return;
+    }
     this.els[0].className = this.els[0].className + " showon";
   }
   show() {
@@ -1017,20 +1042,19 @@ class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
   }
   componentDidMount() {
 
+    this.props.gettarget(this);
     if (this.state.show) {
       this.startAnimation();
-    } else {
-      this.props.gettarget(this);
     }
   }
   componentDidUpdate() {
 
-    this.startAnimation();
+    this.selfupdate && this.startAnimation();
   }
   render() {
     if (this.state.show) {
       this.initContent();
-
+      this.selfupdate = true;
       return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         'div',
         null,
@@ -18838,478 +18862,536 @@ module.exports = camelize;
 
 
 class page extends __WEBPACK_IMPORTED_MODULE_0_react__["Component"] {
-      constructor(props) {
-            super(props);
-            this.state = {
-                  classname: ''
-            };
-            this.targets = [];
-            this.index = -1;
-            this.targetsR = [];
-            this.indexR = -1;
-            this.getTarget = this.getTarget.bind(this);
-            this.getTargetR = this.getTargetR.bind(this);
-            this.finish = this.finish.bind(this);
-            this.finishR = this.finishR.bind(this);
-            this.finishSV = this.finishSV.bind(this);
-      }
-      finish() {
-            this.index++;
-            this.targets[this.index].show();
-      }
-      finishR() {
-            this.indexR++;
-            this.targetsR[this.indexR].show();
-      }
-      finishSV() {
-            this.rightelement.className = 'right';
-            this.finish();
-      }
-      getTarget(target) {
-            this.targets.push(target);
-      }
-      getTargetR(target) {
-            this.targetsR.push(target);
-      }
+  constructor(props) {
+    super(props);
+    this.state = {
+      target: "Pc",
+      flag: false
+    };
+    this.play = true;
+    this.targets = [];
+    this.index = 0;
+    this.targetsR = [];
+    this.indexR = 0;
+    this.styles = [];
+    this.mobilestyle = [`#codepanel {
+    width:100%;
+    height:100vw;
+    overflow-Y:auto;
+}`, `#codepanel {
+transform:rotateX(-10deg) translateZ(-100px);
+}`, `#codepanel {
+position:relative;
+left:0;
+}`];
+    this.pcstyle = [`#codepanel {
+    width:50%;
+    height:45vw;
+    overflow-Y:auto;
+}`, `#codepanel {
+    transform:rotateY(10deg) translateZ(-100px);
+}`, `#codepanel {
+    position:fixed;
+    left:0;
+}`];
+    this.getStyles = this.getStyles.bind(this);
+    this.getTarget = this.getTarget.bind(this);
+    this.getTargetR = this.getTargetR.bind(this);
+    this.finish = this.finish.bind(this);
+    this.finishR = this.finishR.bind(this);
+    this.finishSV = this.finishSV.bind(this);
+    this.getWindowType = this.getWindowType.bind(this);
+  }
+  getDeviceType() {
+    if (navigator.userAgent.search(/Mobile/) !== -1) {
+      this.setState({
+        target: "Mobile"
+      });
+    }
+  }
+  getWindowType() {
 
-      render() {
-            console.log();
-            var s1, s2, s3, s4;
-            if (navigator.userAgent.search(/Mobile/) != -1) {
-                  s1 = `#codepanel {
-      width:100%;
-      height:100vw;
-      overflow-Y:auto;
-  }`;
-                  s2 = `#codepanel {
-      transform:rotateX(-10deg) translateZ(-100px);
-}`;
-                  s3 = `#codepanel {
-      position:relative;
-      left:0;
-}`;
-            } else {
-                  s1 = `#codepanel {
-      width:50%;
-      height:45vw;
-      overflow-Y:auto;
-  }`;
-                  s2 = `#codepanel {
-      transform:rotateY(10deg) translateZ(-100px);
-}`;
-                  s3 = `#codepanel {
-      position:fixed;
-      left:0;
-}`;
-            }
+    if (window.innerWidth < 768) {
+      this.removeStyle(this.styles, "Mobile");
+      this.setState({
+        target: "Mobile",
+        flag: true
+      });
+    } else {
+      this.removeStyle(this.styles, "Pc");
+      this.setState({
+        target: "Pc",
+        flag: true
+      });
+    }
+  }
+  componentWillMount() {
+    this.getDeviceType();
+    window.onresize = this.getWindowType;
+  }
+  finish() {
+    this.index++;
+    this.targets[this.index].show();
+  }
+  finishR() {
+    this.indexR++;
+    this.targetsR[this.indexR].show();
+  }
+  finishSV() {
+    this.rightelement.className = 'right';
+    this.finish();
+  }
+  getTarget(target) {
+    this.targets.push(target);
+  }
+  getTargetR(target) {
+    this.targetsR.push(target);
+  }
+  getStyles(style) {
+    this.styles.push(style);
+  }
+  removeStyle(a, type) {
+    if (a.length > 0) {
+      for (var i = 0; i < a.length; i++) {
+        document.head.removeChild(a[i]);
+        var style = document.createElement("style");
+        type == 'Mobile' ? style.innerHTML = this.mobilestyle[i] : style.innerHTML = this.pcstyle[i];
+        document.head.appendChild(style);
+        a[i] = style;
+      }
+    }
+  }
+  addStyle(a) {
+    for (var i = 0; i < a.length; i++) {
+      var style = document.createElement("style");
+      style.innerHTML = a[i];
+      document.head.appendChild(style);
+      this.styles[i] = style;
+    }
+  }
+  render() {
 
-            return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                  'div',
-                  null,
-                  __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                        'div',
-                        { id: 'codepanel' },
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, start: true, finish: this.finish },
-                              `/*
+    var s1,
+        s2,
+        s3,
+        ss = [];
+    if (this.state.target == 'Mobile') {
+      s1 = this.mobilestyle[0];
+      s2 = this.mobilestyle[1];
+      s3 = this.mobilestyle[2];
+    } else {
+      s1 = this.pcstyle[0];
+      s2 = this.pcstyle[1];
+      s3 = this.pcstyle[2];
+    }
+
+    return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+      'div',
+      null,
+      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+        'div',
+        { id: 'codepanel' },
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, start: true, finish: this.finish },
+          `/*
  *  感谢您打开这个网页.
  *  我是Ciwi,一名前端程序员.
 */
 
  /*  让我们从写代码开始吧...  */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `
 * {
       transition: all .3s;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish },
+          `
 /*
  *  现在背景看起来有点单调
  *  那我们来给它一点颜色吧...
 */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `body {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `body {
       background-color:rgba(0,43,54,1);
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `#codepanel {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `#codepanel {
       color:white;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish },
+          `
 /*  把代码区标识出来  */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `#codepanel {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `#codepanel {
       border:1px solid white;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              s1
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true, getstyle: this.getStyles, fix: true },
+          s1
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish },
+          `
 /*  加点3D效果,看起来有立体感些  */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `#app {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `#app {
       perspective:1000px;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              s2
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              s3
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true, getstyle: this.getStyles, fix: true },
+          s2
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true, getstyle: this.getStyles, fix: true },
+          s3
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish },
+          `
 /*  代码看起来有些难识别,让代码高亮  */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `.selector {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `.selector {
       color:orange;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `.key {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `.key {
       color:#64D5EA;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finish, addstyle: true },
-                              `.value {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finish, addstyle: true },
+          `.value {
       color:#BE84F2;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTarget, finish: this.finishSV },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTarget, finish: this.finishSV },
+          `
 /*  现在请允许我进行简单的自我介绍  */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR },
-                              `
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR },
+          `
 /*  自我介绍现在看起来有些粗糙, 需要将它美化格式一下 */`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.right {
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.right {
       padding:15px;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.separate-line{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.separate-line{
 display:none;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.resume-title{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.resume-title{
       font-size: 1.5em;
       font-weight: bold;
       display:inline-block;
       border-bottom:1px solid black;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.personal-detail{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.personal-detail{
       margin:14px 0px;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.github-link{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.github-link{
       margin-top:14px;
       display:block;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.skill-ul{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.skill-ul{
       list-style-type: disc;
       padding-left:40px;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
-                              `.project-ul{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, finish: this.finishR, addstyle: true },
+          `.project-ul{
       list-style-type: decimal;
       padding-left:40px;
 }`
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                              { gettarget: this.getTargetR, addstyle: true },
-                              `a{
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+          { gettarget: this.getTargetR, addstyle: true },
+          `.project-ul span,.github-link span{
       color:#ff4081;
       text-decoration: underline;
 }`
-                        )
-                  ),
-                  __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                        'div',
-                        { ref: el => {
-                                    this.rightelement = el;
-                              } },
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'h2',
-                              { className: 'resume-title' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    'Ciwi'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'div',
-                              { className: 'separate-line' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '------'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'div',
-                              { className: 'personal-detail' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '\u524D\u7AEF\u7A0B\u5E8F\u5458'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'h2',
-                              { className: 'resume-title' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '\u6280\u80FD'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'div',
-                              { className: 'separate-line' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '---------'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'ul',
-                              { className: 'skill-ul' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                          { gettarget: this.getTarget, finish: this.finish },
-                                          'Vue.js'
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                          { gettarget: this.getTarget, finish: this.finish },
-                                          '\u80FD\u4F7F\u7528React.js\u8FDB\u884C\u5F00\u53D1'
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                          { gettarget: this.getTarget, finish: this.finish },
-                                          '\u80FD\u4F7F\u7528Webpack\u8FDB\u884C\u5F00\u53D1'
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                          { gettarget: this.getTarget, finish: this.finish },
-                                          '\u80FD\u4F7F\u7528PHP\u8FDB\u884C\u5F00\u53D1'
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                          { gettarget: this.getTarget, finish: this.finish },
-                                          '\u80FD\u4F7F\u7528Webpack\u8FDB\u884C\u5F00\u53D1'
-                                    )
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'h2',
-                              { className: 'resume-title' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '\u76F8\u5173\u9879\u76EE'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'div',
-                              { className: 'separate-line' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '---------'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'ul',
-                              { className: 'project-ul' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          'a',
-                                          { target: '_blank', href: 'http://www.bluamore.com' },
-                                          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                                { gettarget: this.getTarget, finish: this.finish },
-                                                'Bluamore'
-                                          )
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          'a',
-                                          { target: '_blank', href: 'http://www.gdace.com/opencart2.1/' },
-                                          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                                { gettarget: this.getTarget, finish: this.finish },
-                                                'CrystalAce'
-                                          )
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          'a',
-                                          { target: '_blank', href: 'http://easyhome.applinzi.com' },
-                                          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                                { gettarget: this.getTarget, finish: this.finish },
-                                                'Easyhome'
-                                          )
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          'a',
-                                          { target: '_blank', href: '#' },
-                                          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                                { gettarget: this.getTarget, finish: this.finish },
-                                                'React\u7B80\u5386'
-                                          )
-                                    )
-                              ),
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    'li',
-                                    null,
-                                    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                          'a',
-                                          { target: '_blank', href: 'http://easyhome.applinzi.com/public/jx3/' },
-                                          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                                { gettarget: this.getTarget, finish: this.finish },
-                                                '\u95E8\u6D3E\u4ECB\u7ECD(\u5251\u4FA0\u60C5\u7F18\u7F51\u7EDC\u7248\u53C1-H5\u540C\u4EBA\u5F81\u96C6\u5927\u8D5B\u4E8C\u7B49\u7EA7\u4F5C\u54C1)'
-                                          )
-                                    )
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'h2',
-                              { className: 'resume-title' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '\u94FE\u63A5'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'div',
-                              { className: 'separate-line' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finish },
-                                    '---------'
-                              )
-                        ),
-                        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                              'a',
-                              { target: '_blank', href: 'https://github.com/ciwihg', className: 'github-link' },
-                              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
-                                    __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
-                                    { gettarget: this.getTarget, finish: this.finishR },
-                                    'Github'
-                              )
-                        )
-                  )
-            );
-      }
+        )
+      ),
+      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+        'div',
+        { ref: el => {
+            this.rightelement = el;
+          } },
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'h2',
+          { className: 'resume-title' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            'Ciwi'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'div',
+          { className: 'separate-line' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '------'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'div',
+          { className: 'personal-detail' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '\u524D\u7AEF\u7A0B\u5E8F\u5458'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'h2',
+          { className: 'resume-title' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '\u6280\u80FD'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'div',
+          { className: 'separate-line' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '---------'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'ul',
+          { className: 'skill-ul' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+              { gettarget: this.getTarget, finish: this.finish },
+              'Vue.js'
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+              { gettarget: this.getTarget, finish: this.finish },
+              '\u80FD\u4F7F\u7528React.js\u8FDB\u884C\u5F00\u53D1'
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+              { gettarget: this.getTarget, finish: this.finish },
+              '\u80FD\u4F7F\u7528Webpack\u8FDB\u884C\u5F00\u53D1'
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+              { gettarget: this.getTarget, finish: this.finish },
+              '\u80FD\u4F7F\u7528PHP\u8FDB\u884C\u5F00\u53D1'
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+              { gettarget: this.getTarget, finish: this.finish },
+              '\u80FD\u4F7F\u7528Webpack\u8FDB\u884C\u5F00\u53D1'
+            )
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'h2',
+          { className: 'resume-title' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '\u76F8\u5173\u9879\u76EE'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'div',
+          { className: 'separate-line' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '---------'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'ul',
+          { className: 'project-ul' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              'a',
+              { target: '_blank', href: 'http://www.bluamore.com' },
+              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+                { gettarget: this.getTarget, finish: this.finish },
+                'Bluamore'
+              )
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              'a',
+              { target: '_blank', href: 'http://www.gdace.com/opencart2.1/' },
+              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+                { gettarget: this.getTarget, finish: this.finish },
+                'CrystalAce'
+              )
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              'a',
+              { target: '_blank', href: 'http://easyhome.applinzi.com' },
+              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+                { gettarget: this.getTarget, finish: this.finish },
+                'Easyhome'
+              )
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              'a',
+              { target: '_blank', href: '#' },
+              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+                { gettarget: this.getTarget, finish: this.finish },
+                '\u52A8\u753B\u7B80\u5386'
+              )
+            )
+          ),
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            'li',
+            null,
+            __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+              'a',
+              { target: '_blank', href: 'http://easyhome.applinzi.com/public/jx3/' },
+              __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+                __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+                { gettarget: this.getTarget, finish: this.finish },
+                '\u95E8\u6D3E\u4ECB\u7ECD(\u5251\u4FA0\u60C5\u7F18\u7F51\u7EDC\u7248\u53C1-H5\u540C\u4EBA\u5F81\u96C6\u5927\u8D5B\u4E8C\u7B49\u7EA7\u4F5C\u54C1)'
+              )
+            )
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'h2',
+          { className: 'resume-title' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '\u94FE\u63A5'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'div',
+          { className: 'separate-line' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finish },
+            '---------'
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+          'a',
+          { target: '_blank', href: 'https://github.com/ciwihg', className: 'github-link' },
+          __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_1__components_showtextanimation_js__["a" /* default */],
+            { gettarget: this.getTarget, finish: this.finishR },
+            'Github'
+          )
+        )
+      )
+    );
+  }
 }
 
 /* harmony default export */ __webpack_exports__["a"] = (page);
@@ -19465,6 +19547,7 @@ class Texttostyle {
     var style = document.createElement("style");
     style.innerHTML = c;
     document.head.appendChild(style);
+    return style;
   }
 }
 

@@ -202,7 +202,7 @@ display:none;
       list-style-type: decimal;
       padding-left:40px;
 }`}</Showtext>
-      <Showtext gettarget={this.getTargetR}   addstyle={true} >{`a{
+      <Showtext gettarget={this.getTargetR}   addstyle={true} >{`.project-ul span,.github-link span{
       color:#ff4081;
       text-decoration: underline;
 }`}</Showtext>
@@ -227,7 +227,7 @@ display:none;
         <li><a target="_blank" href="http://www.bluamore.com"><Showtext gettarget={this.getTarget} finish={this.finish}  >Bluamore</Showtext></a></li>
         <li><a target="_blank" href="http://www.gdace.com/opencart2.1/"><Showtext gettarget={this.getTarget} finish={this.finish}  >CrystalAce</Showtext></a></li>
         <li><a target="_blank" href="http://easyhome.applinzi.com"><Showtext gettarget={this.getTarget} finish={this.finish}  >Easyhome</Showtext></a></li>
-        <li><a target="_blank" href="#"><Showtext gettarget={this.getTarget} finish={this.finish}  >React简历</Showtext></a></li>
+        <li><a target="_blank" href="#"><Showtext gettarget={this.getTarget} finish={this.finish}  >动画简历</Showtext></a></li>
         <li><a target="_blank" href="http://easyhome.applinzi.com/public/jx3/"><Showtext gettarget={this.getTarget} finish={this.finish}  >门派介绍(剑侠情缘网络版叁-H5同人征集大赛二等级作品)</Showtext></a></li>
       </ul>
       <h2 className="resume-title"><Showtext gettarget={this.getTarget} finish={this.finish}  >链接</Showtext></h2>
